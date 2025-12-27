@@ -1,10 +1,11 @@
-package com.project.ecommerce.user_service.services;
+package com.project.ecommerce.user_service.services.impl;
 
 import com.project.ecommerce.user_service.exceptions.*;
 import com.project.ecommerce.user_service.models.Token;
 import com.project.ecommerce.user_service.models.User;
 import com.project.ecommerce.user_service.repositories.TokenRepository;
 import com.project.ecommerce.user_service.repositories.UserRepository;
+import com.project.ecommerce.user_service.services.UserService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
     private TokenRepository tokenRepository;
