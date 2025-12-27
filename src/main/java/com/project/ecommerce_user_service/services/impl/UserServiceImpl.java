@@ -60,10 +60,10 @@ public class UserServiceImpl implements UserService {
          */
 
         SendEmailDto sendEmailDto = new SendEmailDto();
-        sendEmailDto.setTo(email);
-        sendEmailDto.setFrom("admin@amazon.com");
-        sendEmailDto.setSubject("Welcome to Amazon");
-        sendEmailDto.setBody("Thanks for joining Amazon");
+        sendEmailDto.setToEmail(email);
+        sendEmailDto.setFromEmail("bestecommerceapp@gmail.com");
+        sendEmailDto.setSubject("Welcome to Best Ecommerce");
+        sendEmailDto.setBody("Thanks for joining Best Ecommerce");
 
         this.kafkaProducerClient.sendMessage(
                 "sendEmail",
