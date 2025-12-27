@@ -1,5 +1,9 @@
 package com.project.ecommerce.user_service.services.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.ecommerce.user_service.configurations.KafkaProducerClient;
+import com.project.ecommerce.user_service.dtos.SendEmailDto;
 import com.project.ecommerce.user_service.exceptions.*;
 import com.project.ecommerce.user_service.models.Token;
 import com.project.ecommerce.user_service.models.User;
@@ -19,16 +23,22 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
     private TokenRepository tokenRepository;
+    private KafkaProducerClient kafkaProducerClient;
+    private ObjectMapper objectMapper;
 
     public UserServiceImpl(UserRepository userRepository,
                            BCryptPasswordEncoder bCryptPasswordEncoder,
-                           TokenRepository tokenRepository) {
+                           TokenRepository tokenRepository,
+                           KafkaProducerClient kafkaProducerClient,
+                           ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.tokenRepository = tokenRepository;
+        this.kafkaProducerClient = kafkaProducerClient;
+        this.objectMapper = objectMapper;
     }
     @Override
-    public User signUp(String name, String email, String password) throws UserAlreadyExistsException {
+    public User signUp(String name, String email, String password) throws UserAlreadyExistsException, JsonProcessingException {
         // Verify if user already exists
         Optional<User> optionalUser = this.userRepository.findByEmail(email);
         if (optionalUser.isPresent()) {
@@ -42,7 +52,25 @@ public class UserServiceImpl implements UserService {
         user.setHashedPassword(bCryptPasswordEncoder.encode(password));
         user.setEmailVerified(Boolean.TRUE);
 
-        return userRepository.save(user);
+        user = userRepository.save(user);
+
+        /*
+        Once a new account is created for the user, we need to send event to the Kafka topic
+        so that EmailService can consume it
+         */
+
+        SendEmailDto sendEmailDto = new SendEmailDto();
+        sendEmailDto.setTo(email);
+        sendEmailDto.setFrom("admin@amazon.com");
+        sendEmailDto.setSubject("Welcome to Amazon");
+        sendEmailDto.setBody("Thanks for joining Amazon");
+
+        this.kafkaProducerClient.sendMessage(
+                "sendEmail",
+                objectMapper.writeValueAsString(sendEmailDto)
+        );
+
+        return user;
     }
 
     @Override
